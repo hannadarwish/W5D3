@@ -62,6 +62,9 @@ class Question
         Reply.find_by_question_id(id)
     end
 
+    def followers 
+        QuestionFollow.followers_for_question_id(id)
+    end
 end
 
 class User
@@ -107,6 +110,10 @@ class User
     def authored_replies
         Reply.find_by_user_id(id)
     end
+
+    def followed_questions
+        QuestionFollow.followed_questions_for_user_id(id)
+    end
 end
 
 class QuestionFollow
@@ -122,6 +129,40 @@ class QuestionFollow
                 id = ?
         SQL
         QuestionFollow.new(result[0])
+    end
+
+    def self.followers_for_question_id(question_id)
+        db = QuestionsDatabase.instance
+        result = db.execute(<<-SQL, question_id)
+            SELECT
+                users.*
+            FROM
+                question_follows
+            JOIN
+                users ON users.id = question_follows.user_id
+            WHERE
+                question_id = ?
+        SQL
+        result.map do |row|
+            User.new(row)
+        end
+    end
+
+    def self.followed_questions_for_user_id(user_id)
+        db = QuestionsDatabase.instance
+        result = db.execute(<<-SQL, user_id)
+            SELECT
+                questions.*
+            FROM
+                question_follows
+            JOIN
+                questions ON questions.id = question_follows.question_id
+            WHERE
+                user_id = ?
+        SQL
+        result.map do |row|
+            Question.new(row)
+        end
     end
 
     def initialize(options)
