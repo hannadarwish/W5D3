@@ -55,6 +55,27 @@ INSERT INTO
     questions (title, author_id, body)
 VALUES 
     ('What day is it today?', 1, 'I don''t know what day it is. Can someone please tell me?'),
-    ('Is it the weekend yet?', 2, 'Unsure how many more days until the weekend. Help.')
+    ('Is it the weekend yet?', 2, 'Unsure how many more days until the weekend. Help.');
     
+INSERT INTO
+    question_follows (follower_id, question_id)
+VALUES
+    (1,1),
+    (1,2),
+    (2,2);
+
+INSERT INTO
+    replies (question_id, parent_id, author_id, body)
+VALUES
+    (1, NULL, 2, 'Tuesday!'),
+    (1, 1, 1, 'Thanks!'),
+    (2, NULL, 1, '3 Days until the weekend.'),
+    (2, 3, 2, 'Thanks.');
+
+INSERT INTO 
+    question_likes (question_id, user_id)
+VALUES
+    (1,1),
+    (1,2),
+    (2,1);
 
