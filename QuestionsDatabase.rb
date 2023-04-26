@@ -29,7 +29,7 @@ class Question
         SQL
         Question.new(result[0])
 
-        # Question.all.each {|row| return Question.new(row) if row['id'] == id}
+        # Question.all.each {|question| return question if question.id == id}
     end
 
     def self.find_by_author_id(author_id)
@@ -54,6 +54,14 @@ class Question
         @author_id = options['author_id']
     end
 
+    def author
+        User.find_by_id(author_id)
+    end
+
+    def replies
+        Reply.find_by_question_id(id)
+    end
+
 end
 
 class User
@@ -75,6 +83,29 @@ class User
         @id = options['id']
         @fname = options['fname']
         @lname = options['lname']
+    end
+
+    def self.find_by_name(fname, lname)
+        db = QuestionsDatabase.instance
+        result = db.execute(<<-SQL, fname, lname)
+            SELECT
+                *
+            FROM
+                users
+            WHERE
+                fname = ? AND lname = ?
+        SQL
+        result.map do |row|
+            User.new(row)
+        end
+    end
+
+    def authored_questions
+        Question.find_by_author_id(id) #array of q instances
+    end
+
+    def authored_replies
+        Reply.find_by_user_id(id)
     end
 end
 
@@ -121,6 +152,61 @@ class Reply
         @parent_reply_id = options['parent_reply_id']
         @author_id = options['author_id']
         @body = options['body']
+    end
+
+    def self.find_by_user_id(user_id)
+        db = QuestionsDatabase.instance
+        result = db.execute(<<-SQL, user_id)
+            SELECT
+                *
+            FROM
+                replies
+            WHERE author_id = ?
+        SQL
+        result.map do |row|
+            Reply.new(row)
+        end
+    end
+
+    def self.find_by_question_id(question_id)
+        db = QuestionsDatabase.instance
+        result = db.execute(<<-SQL, question_id)
+        SELECT
+            *
+        FROM
+            replies
+        WHERE question_id = ?
+        SQL
+        result.map do |row|
+            Reply.new(row)
+        end
+    end
+
+    def author
+        User.find_by_id(author_id)
+    end
+
+    def question
+        Question.find_by_id(question_id)
+    end
+
+    def parent_reply
+        Reply.find_by_id(parent_reply_id)
+    end
+
+    def child_replies
+        db = QuestionsDatabase.instance
+        result = db.execute(<<-SQL, id)
+            SELECT
+            *
+            FROM
+                replies
+            WHERE
+                parent_reply_id = ?
+        SQL
+        result.map do |row|
+            Reply.new(row)
+        end
     end
 end
 
